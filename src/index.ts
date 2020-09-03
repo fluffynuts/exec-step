@@ -31,7 +31,7 @@ const defaultConfig: ExecStepConfiguration = {
     dumpErrorStacks: false
 };
 
-export class Context {
+export class ExecStepContext {
     private _config: ExecStepConfiguration;
     private readonly _waitColor: StyleFunction;
     private readonly _okColor: StyleFunction;

@@ -1,6 +1,6 @@
 import "expect-even-more-jest";
 import * as faker from "faker";
-import { Context, ExecStepConfiguration } from "../src";
+import { ExecStepContext, ExecStepConfiguration } from "../src";
 import Spy = jasmine.Spy;
 
 describe(`exec-step`, () => {
@@ -171,7 +171,7 @@ describe(`exec-step`, () => {
     });
 
     function create(config?: ExecStepConfiguration) {
-        return new Context(config);
+        return new ExecStepContext(config);
     }
 
     beforeEach(() => {
