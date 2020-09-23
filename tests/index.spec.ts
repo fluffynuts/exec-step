@@ -171,7 +171,10 @@ describe(`exec-step`, () => {
     });
 
     function create(config?: ExecStepConfiguration) {
-        return new ExecStepContext(config);
+        if (config) {
+            config.asciiPrefixes = true;
+        }
+        return new ExecStepContext(config ?? "ascii");
     }
 
     beforeEach(() => {

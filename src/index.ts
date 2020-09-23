@@ -10,6 +10,7 @@ interface PartialStepConfig<T> {
 }
 
 export interface ExecStepConfiguration {
+    asciiPrefixes?: boolean;
     prefixes?: PartialStepConfig<string>;
     colors?: PartialStepConfig<string>;
     throwErrors?: boolean;
@@ -17,11 +18,6 @@ export interface ExecStepConfiguration {
 }
 
 const defaultConfig: ExecStepConfiguration = {
-    prefixes: {
-        wait: "[ WAIT ]",
-        ok: "[  OK  ]",
-        fail: "[ FAIL ]"
-    },
     colors: {
         wait: "yellowBright",
         ok: "greenBright",
@@ -30,6 +26,33 @@ const defaultConfig: ExecStepConfiguration = {
     throwErrors: true,
     dumpErrorStacks: false
 };
+
+
+const utf8Prefixes: PartialStepConfig<string> = {
+    wait: "⌛",
+    ok: "✔",
+    fail: "✖"
+};
+
+const asciiPrefixes: PartialStepConfig<string> = {
+    wait: "[ WAIT ]",
+    ok: "[  OK  ]",
+    fail: "[ FAIL ]"
+}
+
+function envFlag(name: string, fallback: boolean = false) {
+    const envValue = process.env[name];
+    if (envValue === undefined) {
+        return fallback;
+    }
+    return [
+        "1",
+        "true",
+        "yes",
+        "on",
+        "ok"
+    ].indexOf(envValue.toLowerCase()) > -1;
+}
 
 export class ExecStepContext {
     private _config: ExecStepConfiguration;
@@ -40,24 +63,41 @@ export class ExecStepContext {
     private _current: string = "";
     private _prefixes: PartialStepConfig<string>;
 
-    constructor(config?: ExecStepConfiguration) {
-        if (defaultConfig.colors === undefined ||
-            defaultConfig.prefixes === undefined) {
+    constructor(config?: ExecStepConfiguration | "ascii") {
+
+        const defaults = { ...defaultConfig };
+        defaults.prefixes = envFlag("ASCII_STEP_MARKERS", false)
+            ? asciiPrefixes
+            : utf8Prefixes;
+
+        if (config === "ascii") {
+            config = { ...defaults, prefixes: asciiPrefixes }
+            if (process.env.ASCII_STEP_MARKERS !== undefined) {
+                // env overrides always
+                config.prefixes = defaults.prefixes;
+            }
+        }
+
+        if (defaults.colors === undefined ||
+            defaults.prefixes === undefined) {
             throw new Error(`internal default config is fuxed`);
         }
-        this._config = Object.assign({}, defaultConfig, config) as ExecStepConfiguration;
+        this._config = Object.assign({}, defaults, config) as ExecStepConfiguration;
+        if (this._config.asciiPrefixes) {
+            this._config.prefixes = asciiPrefixes;
+        }
         if (this._config.prefixes === undefined) {
-            this._config.prefixes = defaultConfig.prefixes;
+            this._config.prefixes = defaults.prefixes;
         }
         this._waitColor = this.resolveColorFunction(
             this._config.colors?.wait,
-            defaultConfig.colors.wait);
+            defaults.colors.wait);
         this._okColor = this.resolveColorFunction(
             this._config.colors?.ok,
-            defaultConfig.colors.ok);
+            defaults.colors.ok);
         this._failColor = this.resolveColorFunction(
             this._config.colors?.fail,
-            defaultConfig.colors.fail);
+            defaults.colors.fail);
         this._prefixes = this._config.prefixes;
     }
 
