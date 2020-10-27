@@ -4,7 +4,7 @@ import { ExecStepContext, ExecStepConfiguration } from "../src";
 import Spy = jasmine.Spy;
 
 describe(`exec-step`, () => {
-    describe(`synchronous functions`, () => {
+    describe.skip(`synchronous functions`, () => {
         it(`should run the func`, async () => {
             // Arrange
             let called = false;
@@ -87,7 +87,7 @@ describe(`exec-step`, () => {
         });
     });
 
-    describe(`asynchronous functions`, () => {
+    describe.skip(`asynchronous functions`, () => {
         it(`should run the func`, async () => {
             // Arrange
             let called = false;
