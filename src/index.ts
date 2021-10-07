@@ -172,5 +172,13 @@ export class ExecStepContext {
         }
     }
 
+    public suppressErrors(): void {
+        this._config.throwErrors = false;
+    }
+
+    public enableErrors(): void {
+        this._config.throwErrors = true;
+    }
+
 }
 
