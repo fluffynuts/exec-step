@@ -56,34 +56,69 @@ describe(`exec-step`, () => {
             expect(calls[1].args[0])
                 .toContain("OK");
         });
-        it(`should print the label for throw`, async () => {
-            // Arrange
-            const
-                sut = create({ throwErrors: false }),
-                label = faker.random.words(),
-                error = faker.random.words(),
-                func = () => {
-                    throw new Error(error);
-                };
-            // Act
-            sut.exec(label, func);
-            // Assert
-            expect(process.stdout.write)
-                .toHaveBeenCalledTimes(2);
-            const calls = (process.stdout.write as Spy).calls.all();
-            expect(calls[0].args[0])
-                .toContain(label);
-            expect(calls[0].args[0])
-                .toContain("WAIT");
-            expect(calls[1].args[0])
-                .toContain(label);
-            expect(calls[1].args[0])
-                .toContain("FAIL");
+        describe(`default behavior`, () => {
+            it(`should print the label for throw & the error message`, async () => {
+                // Arrange
+                const
+                    sut = create({ throwErrors: false }),
+                    label = faker.random.words(),
+                    error = faker.random.words(),
+                    func = () => {
+                        throw new Error(error);
+                    };
+                // Act
+                await sut.exec(label, func);
+                // Assert
+                expect(process.stdout.write)
+                    .toHaveBeenCalledTimes(2);
+                const calls = (process.stdout.write as Spy).calls.all();
+                expect(calls[0].args[0])
+                    .toContain(label);
+                expect(calls[0].args[0])
+                    .toContain("WAIT");
+                expect(calls[1].args[0])
+                    .toContain(label);
+                expect(calls[1].args[0])
+                    .toContain("FAIL");
 
-            expect(process.stderr.write)
-                .toHaveBeenCalledOnceWith(
+                expect(process.stderr.write)
+                    .toHaveBeenCalledOnceWith(
+                        jasmine.stringMatching(error)
+                    );
+            });
+        });
+
+        describe(`when configured not to display errors`, () => {
+            it(`should print the label for throw _only_`, async () => {
+                // Arrange
+                const
+                    sut = create({ throwErrors: false }),
+                    label = faker.random.words(),
+                    error = faker.random.words(),
+                    func = () => {
+                        throw new Error(error);
+                    };
+                // Act
+                sut.suppressErrorReporting();
+                await sut.exec(label, func);
+                // Assert
+                expect(process.stdout.write)
+                    .toHaveBeenCalledTimes(2);
+                const calls = (process.stdout.write as Spy).calls.all();
+                expect(calls[0].args[0])
+                    .toContain(label);
+                expect(calls[0].args[0])
+                    .toContain("WAIT");
+                expect(calls[1].args[0])
+                    .toContain(label);
+                expect(calls[1].args[0])
+                    .toContain("FAIL");
+
+                expect(process.stderr.write)
+                    .not.toHaveBeenCalledOnceWith(
                     jasmine.stringMatching(error)
                 );
+            });
         });
     });
 

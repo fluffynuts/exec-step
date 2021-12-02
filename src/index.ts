@@ -10,6 +10,7 @@ interface PartialStepConfig<T> {
 }
 
 export interface ExecStepConfiguration {
+    suppressErrorReporting?: boolean;
     asciiPrefixes?: boolean;
     prefixes?: PartialStepConfig<string>;
     colors?: PartialStepConfig<string>;
@@ -26,7 +27,6 @@ const defaultConfig: ExecStepConfiguration = {
     throwErrors: true,
     dumpErrorStacks: false
 };
-
 
 const utf8Prefixes: PartialStepConfig<string> = {
     wait: "⌛",
@@ -133,7 +133,7 @@ export class ExecStepContext {
         const message = `${ this._failColor(this._prefixes.fail) } ${ label }`;
         this._current = "";
         process.stdout.write(`${ clear }${ message }\n`);
-        if (!e) {
+        if (!e || this._config.suppressErrorReporting) {
             return;
         }
         const errorMessage = this._config.dumpErrorStacks
@@ -178,6 +178,14 @@ export class ExecStepContext {
 
     public enableErrors(): void {
         this._config.throwErrors = true;
+    }
+
+    public suppressErrorReporting(): void  {
+        this._config.suppressErrorReporting = true;
+    }
+
+    public enableErrorReporting(): void {
+        this._config.suppressErrorReporting = false;
     }
 
 }
