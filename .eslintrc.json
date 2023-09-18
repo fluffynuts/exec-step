@@ -1,0 +1,29 @@
+{
+  "env": {
+    "browser": false,
+    "commonjs": true,
+    "es2017": true
+  },
+  "extends": "standard-with-typescript",
+  "parserOptions": {
+    "ecmaVersion": "latest"
+  },
+  "rules": {
+    "@typescript-eslint/semi": [
+      2,
+      "always"
+    ],
+    "@typescript-eslint/quotes": [
+      "error",
+      "double"
+    ],
+    "@typescript-eslint/strict-boolean-expressions": "off",
+    "@typescript-eslint/space-before-function-paren": "off",
+    "@typescript-eslint/no-invalid-void-type": "off",
+    "@typescript-eslint/consistent-type-assertions": "off",
+    "no-extra-boolean-cast": "off",
+    "@typescript-eslint/member-signature-style": 0,
+    "@typescript-eslint/member-delimiter-style": 0,
+    "no-var": 1
+  }
+}
