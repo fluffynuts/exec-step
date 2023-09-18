@@ -1,6 +1,6 @@
 {
   "name": "exec-step",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "description": "executes a step in a series with console feedback",
   "main": "dist/index.js",
   "scripts": {
@@ -46,7 +46,7 @@
     "ts-jest": "^29.1.1",
     "ts-node": "^9.0.0",
     "typescript": "^5.2.2",
-    "zarro": "^1.93.0"
+    "zarro": "^1.144.257"
   },
   "dependencies": {
     "ansi-colors": "^4.1.1"
