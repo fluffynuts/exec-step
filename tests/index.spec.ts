@@ -1,7 +1,12 @@
 import "expect-even-more-jest";
-import * as faker from "faker";
-import { ExecStepContext, ExecStepConfiguration } from "../src";
-import Spy = jasmine.Spy;
+import { faker } from "@faker-js/faker";
+import { ExecStepContext } from "../src";
+import { ExecStepConfiguration } from "../src/types";
+import { sleep } from "expect-even-more-jest";
+import Mock = jest.Mock;
+
+const realStdoutWrite = process.stdout.write.bind(process.stdout);
+const realStdErrWrite = process.stderr.write.bind(process.stderr);
 
 describe(`exec-step`, () => {
     describe(`synchronous functions`, () => {
@@ -10,7 +15,7 @@ describe(`exec-step`, () => {
             let called = false;
             const
                 sut = create(),
-                label = faker.random.words(),
+                label = faker.word.words(),
                 func = () => called = true;
             // Act
             sut.exec(label, func);
@@ -23,8 +28,8 @@ describe(`exec-step`, () => {
             // Arrange
             const
                 sut = create(),
-                label = faker.random.words(),
-                expected = faker.random.words(),
+                label = faker.word.words(),
+                expected = faker.word.words(),
                 func = () => expected;
             // Act
             const result = sut.exec(label, func);
@@ -37,7 +42,7 @@ describe(`exec-step`, () => {
             // Arrange
             const
                 sut = create(),
-                label = faker.random.words(),
+                label = faker.word.words(),
                 func = () => {
                     // intentionally blank
                 };
@@ -46,14 +51,14 @@ describe(`exec-step`, () => {
             // Assert
             expect(process.stdout.write)
                 .toHaveBeenCalledTimes(2);
-            const calls = (process.stdout.write as Spy).calls.all();
-            expect(calls[0].args[0])
+            const calls = (process.stdout.write as Mock).mock.calls;
+            expect(calls[0][0])
                 .toContain(label);
-            expect(calls[0].args[0])
+            expect(calls[0][0])
                 .toContain("WAIT");
-            expect(calls[1].args[0])
+            expect(calls[1][0])
                 .toContain(label);
-            expect(calls[1].args[0])
+            expect(calls[1][0])
                 .toContain("OK");
         });
         describe(`default behavior`, () => {
@@ -61,8 +66,8 @@ describe(`exec-step`, () => {
                 // Arrange
                 const
                     sut = create({ throwErrors: false }),
-                    label = faker.random.words(),
-                    error = faker.random.words(),
+                    label = faker.word.words(),
+                    error = faker.word.words(),
                     func = () => {
                         throw new Error(error);
                     };
@@ -71,20 +76,23 @@ describe(`exec-step`, () => {
                 // Assert
                 expect(process.stdout.write)
                     .toHaveBeenCalledTimes(2);
-                const calls = (process.stdout.write as Spy).calls.all();
-                expect(calls[0].args[0])
+                const calls = (process.stdout.write as Mock).mock.calls;
+                expect(calls[0][0])
                     .toContain(label);
-                expect(calls[0].args[0])
+                expect(calls[0][0])
                     .toContain("WAIT");
-                expect(calls[1].args[0])
+                expect(calls[1][0])
                     .toContain(label);
-                expect(calls[1].args[0])
+                expect(calls[1][0])
                     .toContain("FAIL");
 
                 expect(process.stderr.write)
                     .toHaveBeenCalledOnceWith(
-                        jasmine.stringMatching(error)
+                        expect.stringMatching(error)
                     );
+            });
+            beforeEach(() => {
+                spyOnIo();
             });
         });
 
@@ -93,8 +101,8 @@ describe(`exec-step`, () => {
                 // Arrange
                 const
                     sut = create({ throwErrors: false }),
-                    label = faker.random.words(),
-                    error = faker.random.words(),
+                    label = faker.word.words(),
+                    error = faker.word.words(),
                     func = () => {
                         throw new Error(error);
                     };
@@ -104,21 +112,27 @@ describe(`exec-step`, () => {
                 // Assert
                 expect(process.stdout.write)
                     .toHaveBeenCalledTimes(2);
-                const calls = (process.stdout.write as Spy).calls.all();
-                expect(calls[0].args[0])
+                const calls = (process.stdout.write as Mock).mock.calls;
+                expect(calls[0][0])
                     .toContain(label);
-                expect(calls[0].args[0])
+                expect(calls[0][0])
                     .toContain("WAIT");
-                expect(calls[1].args[0])
+                expect(calls[1][0])
                     .toContain(label);
-                expect(calls[1].args[0])
+                expect(calls[1][0])
                     .toContain("FAIL");
 
                 expect(process.stderr.write)
                     .not.toHaveBeenCalledOnceWith(
-                    jasmine.stringMatching(error)
+                    expect.stringMatching(error)
                 );
             });
+            beforeEach(() => {
+                spyOnIo();
+            });
+        });
+        beforeEach(() => {
+            spyOnIo();
         });
     });
 
@@ -128,7 +142,7 @@ describe(`exec-step`, () => {
             let called = false;
             const
                 sut = create(),
-                label = faker.random.words(),
+                label = faker.word.words(),
                 func = async () => called = true;
             // Act
             await sut.exec(label, func);
@@ -141,8 +155,8 @@ describe(`exec-step`, () => {
             // Arrange
             const
                 sut = create(),
-                label = faker.random.words(),
-                expected = faker.random.words(),
+                label = faker.word.words(),
+                expected = faker.word.words(),
                 func = async () => expected;
             // Act
             const result = await sut.exec(label, func);
@@ -155,7 +169,7 @@ describe(`exec-step`, () => {
             // Arrange
             const
                 sut = create(),
-                label = faker.random.words(),
+                label = faker.word.words(),
                 func = async () => {
                     // intentionally blank
                 };
@@ -164,22 +178,23 @@ describe(`exec-step`, () => {
             // Assert
             expect(process.stdout.write)
                 .toHaveBeenCalledTimes(2);
-            const calls = (process.stdout.write as Spy).calls.all();
-            expect(calls[0].args[0])
+            const calls = (process.stdout.write as Mock).mock.calls;
+            expect(calls[0][0])
                 .toContain(label);
-            expect(calls[0].args[0])
+            expect(calls[0][0])
                 .toContain("WAIT");
-            expect(calls[1].args[0])
+            expect(calls[1][0])
                 .toContain(label);
-            expect(calls[1].args[0])
+            expect(calls[1][0])
                 .toContain("OK");
         });
+
         it(`should print the label for throw`, async () => {
             // Arrange
             const
                 sut = create({ throwErrors: false }),
-                label = faker.random.words(),
-                error = faker.random.words(),
+                label = faker.word.words(),
+                error = faker.word.words(),
                 func = async () => {
                     throw new Error(error);
                 };
@@ -188,20 +203,61 @@ describe(`exec-step`, () => {
             // Assert
             expect(process.stdout.write)
                 .toHaveBeenCalledTimes(2);
-            const calls = (process.stdout.write as Spy).calls.all();
-            expect(calls[0].args[0])
+            const calls = (process.stdout.write as Mock).mock.calls;
+            expect(calls[0][0])
                 .toContain(label);
-            expect(calls[0].args[0])
+            expect(calls[0][0])
                 .toContain("WAIT");
-            expect(calls[1].args[0])
+            expect(calls[1][0])
                 .toContain(label);
-            expect(calls[1].args[0])
+            expect(calls[1][0])
                 .toContain("FAIL");
 
             expect(process.stderr.write)
                 .toHaveBeenCalledOnceWith(
-                    jasmine.stringMatching(error)
+                    expect.stringMatching(error)
                 );
+        });
+        beforeEach(() => {
+            spyOnIo();
+        });
+    });
+
+    describe(`CI mode`, () => {
+        it.skip(`should print the start and ok on separate lines`, async () => {
+            // Arrange
+            const
+                ctx = new ExecStepContext({
+                    ciMode: true
+                }),
+                label = faker.word.words(3);
+            // Act
+            await ctx.exec(
+                label,
+                () => sleep(500)
+            );
+            // Assert
+            expect(process.stdout.write)
+                .toHaveBeenCalledWith(
+                    `${ label }...`
+                );
+            expect(process.stdout.write)
+                .toHaveBeenCalledWith(
+                    `[  OK  ]\n`
+                );
+        });
+        beforeEach(() => {
+            spyOnIo();
+        });
+    });
+
+    describe(`foo`, () => {
+        it(`bar`, async () => {
+            // Arrange
+            // Act
+            expect(1)
+                .toEqual(1);
+            // Assert
         });
     });
 
@@ -212,8 +268,23 @@ describe(`exec-step`, () => {
         return new ExecStepContext(config ?? "ascii");
     }
 
-    beforeEach(() => {
-        spyOn(process.stdout, "write");
-        spyOn(process.stderr, "write");
-    });
+    const echo = false;
+
+    function spyOnIo() {
+        jest.spyOn(process.stdout, "write").mockImplementation(
+            (s: string | Uint8Array) => {
+                if (echo) {
+                    realStdoutWrite(s);
+                }
+                return true;
+            });
+    }
+
+    jest.spyOn(process.stderr, "write").mockImplementation(
+        (s: string | Uint8Array) => {
+            if (echo) {
+                realStdErrWrite(s);
+            }
+            return true;
+        });
 });
