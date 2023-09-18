@@ -224,7 +224,7 @@ describe(`exec-step`, () => {
     });
 
     describe(`CI mode`, () => {
-        it.skip(`should print the start and ok on separate lines`, async () => {
+        it(`should print the start and ok on the same line`, async () => {
             // Arrange
             const
                 ctx = new ExecStepContext({
@@ -248,16 +248,6 @@ describe(`exec-step`, () => {
         });
         beforeEach(() => {
             spyOnIo();
-        });
-    });
-
-    describe(`foo`, () => {
-        it(`bar`, async () => {
-            // Arrange
-            // Act
-            expect(1)
-                .toEqual(1);
-            // Assert
         });
     });
 

@@ -4,6 +4,7 @@ import { ExecStepConfiguration, Func, PartialStepConfig } from "./types";
 import { asciiPrefixes, defaultConfig, utf8Prefixes } from "./defaults";
 import { InteractiveLabeler } from "./interactive-labeler";
 import { Labeler } from "./labeler";
+import { CiLabeler } from "./ci-labeler";
 
 function envFlag(name: string, fallback: boolean = false) {
     const envValue = process.env[name];
@@ -30,9 +31,6 @@ export class ExecStepContext {
             ? asciiPrefixes
             : utf8Prefixes;
 
-        if (!config) {
-            throw new Error(`config has gone missing`);
-        }
         if (config === "ascii") {
             config = {
                 ...defaults,
@@ -42,13 +40,24 @@ export class ExecStepContext {
                 // env overrides always
                 config.prefixes = defaults.prefixes;
             }
-        } else if (config.asciiPrefixes) {
-            config.prefixes = asciiPrefixes;
+        } else {
+            if (config) {
+                if (config.ciMode) {
+                    if (config.asciiPrefixes === undefined) {
+                        config.asciiPrefixes = true;
+                    }
+                }
+                if (config.asciiPrefixes) {
+                    config.prefixes = asciiPrefixes;
+                }
+            } else {
+                config = { ... defaults }
+            }
         }
 
         const conf = this._config = Object.assign({}, defaults, config) as ExecStepConfiguration;
         if (config.ciMode) {
-            this._labeler = {} as Labeler;
+            this._labeler = new CiLabeler(conf);
         } else {
             this._labeler = new InteractiveLabeler(conf);
         }
