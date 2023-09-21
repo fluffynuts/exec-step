@@ -1,12 +1,12 @@
-import { type ExecStepConfiguration, type PartialStepConfig } from "./types";
+import { type ExecStepConfiguration, type StepConfig } from "./types";
 
-export const utf8Prefixes: PartialStepConfig<string> = {
+export const utf8Prefixes: StepConfig<string> = {
   wait: "⌛",
   ok: "✔",
   fail: "✖"
 };
 
-export const asciiPrefixes: PartialStepConfig<string> = {
+export const asciiPrefixes: StepConfig<string> = {
   wait: "[ WAIT ]",
   ok: "[  OK  ]",
   fail: "[ FAIL ]"
@@ -19,5 +19,9 @@ export const defaultConfig: ExecStepConfiguration = {
     fail: "redBright"
   },
   throwErrors: true,
-  dumpErrorStacks: false
+  dumpErrorStacks: false,
+  suppressErrorReporting: false,
+  asciiPrefixes: false,
+  prefixes: { ...utf8Prefixes },
+  ciMode: false
 };

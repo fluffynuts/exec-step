@@ -1,3 +1,5 @@
+// noinspection PointlessBooleanExpressionJS
+
 import * as colors from "ansi-colors";
 import { type StyleFunction } from "ansi-colors";
 import { type ExecStepConfiguration, type Func } from "./types";
@@ -24,40 +26,73 @@ export class ExecStepContext {
   private readonly _config: ExecStepConfiguration;
   private readonly _labeler: Labeler;
 
-  constructor(config?: ExecStepConfiguration | "ascii") {
+  constructor(config?: Partial<ExecStepConfiguration> | "ascii") {
+    // const defaults = { ...defaultConfig };
+    // defaults.prefixes = envFlag("ASCII_STEP_MARKERS", false)
+    //   ? asciiPrefixes
+    //   : utf8Prefixes;
+    //
+    // if (config === "ascii") {
+    //   config = {
+    //     ...defaults,
+    //     prefixes: asciiPrefixes
+    //   };
+    //   if (process.env.ASCII_STEP_MARKERS !== undefined) {
+    //     // env overrides always
+    //     config.prefixes = defaults.prefixes;
+    //   }
+    // } else {
+    //   if (!!config) {
+    //     if (config.ciMode === true && config.asciiPrefixes === undefined) {
+    //       config.asciiPrefixes = true;
+    //     }
+    //     if (config.asciiPrefixes === true) {
+    //       config.prefixes = asciiPrefixes;
+    //     }
+    //   } else {
+    //     config = { ...defaults };
+    //   }
+    // }
+    //
+    const conf = this._config = this._resolveConfig(config);
+    if (conf.ciMode) {
+      this._labeler = new CiLabeler(conf);
+    } else {
+      this._labeler = new InteractiveLabeler(conf);
+    }
+  }
+
+  private _resolveConfig(config?: Partial<ExecStepConfiguration> | "ascii"): ExecStepConfiguration {
     const defaults = { ...defaultConfig };
     defaults.prefixes = envFlag("ASCII_STEP_MARKERS", false)
       ? asciiPrefixes
       : utf8Prefixes;
 
+    let result: ExecStepConfiguration;
     if (config === "ascii") {
-      config = {
+      result = {
         ...defaults,
         prefixes: asciiPrefixes
       };
       if (process.env.ASCII_STEP_MARKERS !== undefined) {
         // env overrides always
-        config.prefixes = defaults.prefixes;
+        result.prefixes = defaults.prefixes;
       }
     } else {
+      result = { ...config } as ExecStepConfiguration;
       if (!!config) {
         if (config.ciMode === true && config.asciiPrefixes === undefined) {
-          config.asciiPrefixes = true;
+          result.asciiPrefixes = true;
         }
-        if (config.asciiPrefixes === true) {
-          config.prefixes = asciiPrefixes;
+        // eslint-disable-next-line @typescript-eslint/no-unnecessary-boolean-literal-compare
+        if (result.asciiPrefixes === true) {
+          result.prefixes = asciiPrefixes;
         }
       } else {
-        config = { ...defaults };
+        result = { ...defaults };
       }
     }
-
-    const conf = this._config = Object.assign({}, defaults, config) as ExecStepConfiguration;
-    if (config.ciMode) {
-      this._labeler = new CiLabeler(conf);
-    } else {
-      this._labeler = new InteractiveLabeler(conf);
-    }
+    return Object.assign({}, defaults, result) as ExecStepConfiguration;
   }
 
   private resolveColorFunction(fn: string | undefined, fallback: string): StyleFunction {
@@ -127,3 +162,5 @@ export class ExecStepContext {
     this._labeler.enableErrorReporting();
   }
 }
+
+export const ctx = new ExecStepContext();

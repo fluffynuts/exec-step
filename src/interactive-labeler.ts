@@ -1,6 +1,6 @@
 import * as colors from "ansi-colors";
 import { type Labeler } from "./labeler";
-import { type ExecStepConfiguration, type PartialStepConfig } from "./types";
+import { type ExecStepConfiguration, type StepConfig } from "./types";
 import { asciiPrefixes, defaultConfig } from "./defaults";
 import { type StyleFunction } from "ansi-colors";
 
@@ -10,7 +10,7 @@ export class InteractiveLabeler implements Labeler {
   private readonly _waitColor: StyleFunction;
   private readonly _okColor: StyleFunction;
   private readonly _failColor: StyleFunction;
-  private readonly _prefixes: PartialStepConfig<string>;
+  private readonly _prefixes: StepConfig<string>;
 
   constructor(cfg: ExecStepConfiguration) {
     this._config = { ...cfg };
@@ -20,8 +20,7 @@ export class InteractiveLabeler implements Labeler {
     if (this._config.prefixes === undefined) {
       this._config.prefixes = defaultConfig.prefixes;
     }
-    const defaultColors = defaultConfig.colors ??
-                          {} as PartialStepConfig<string>;
+    const defaultColors = defaultConfig.colors as StepConfig<string>;
     this._waitColor = this.resolveColorFunction(
       this._config.colors?.wait,
       defaultColors.wait
