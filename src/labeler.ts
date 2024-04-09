@@ -6,4 +6,6 @@ export interface Labeler {
   suppressErrorReporting: () => void;
   enableErrorReporting: () => void;
   enableErrors: () => void;
+  indent: number;
+  readonly lastLineLength: number;
 }

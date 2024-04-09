@@ -1,9 +1,11 @@
+/* eslint-disable @typescript-eslint/quotes,@typescript-eslint/explicit-function-return-type,one-var */
 import "expect-even-more-jest";
 import { faker } from "@faker-js/faker";
 import { ExecStepContext } from "../src";
 import { ExecStepConfiguration } from "../src/types";
 import { sleep } from "expect-even-more-jest";
 import Mock = jest.Mock;
+import Spy = jasmine.Spy;
 
 const realStdoutWrite = process.stdout.write.bind(process.stdout);
 const realStdErrWrite = process.stderr.write.bind(process.stderr);
@@ -47,7 +49,7 @@ describe(`exec-step`, () => {
           // intentionally blank
         };
       // Act
-      sut.exec(label, func);
+      void sut.exec(label, func);
       // Assert
       expect(process.stdout.write)
         .toHaveBeenCalledTimes(2);
@@ -60,6 +62,77 @@ describe(`exec-step`, () => {
         .toContain(label);
       expect(calls[1][0])
         .toContain("OK");
+    });
+
+    describe(`indentation`, () => {
+      beforeEach(() => {
+        process.env.NO_COLOR = "1";
+      });
+      afterEach(() => {
+        process.env.NO_COLOR = undefined;
+      });
+      describe(`ci`, () => {
+        it(`should indent by the provided character count`, async () => {
+          // Arrange
+          const
+            sut = create({
+              indent: 2
+            }),
+            label = faker.word.words(),
+            func = () => {
+              // intentionally blank
+            };
+          // Act
+          void sut.exec(label, func);
+          // Assert
+          expect(process.stdout.write)
+            .toHaveBeenCalledTimes(2);
+          const mock = (process.stdout.write as jest.Mock).mock;
+          expect(mock.calls[0][0])
+            .toEqual(`\r\r  [ WAIT ]  ${label}`);
+          const clear = " ".repeat(`[  OK  ]  ${label}`.length);
+          const x = mock.calls[1][0];
+          const parts = x.split("\r");
+          expect(parts[0])
+            .toBeEmptyString();
+          expect(parts[1])
+            .toEqual(clear);
+          expect(parts[2])
+            .toEqual(`  [  OK  ]  ${label}\n`);
+        });
+      });
+      
+      describe(`interactive`, () => {
+        it(`should indent by the provided character count`, async () => {
+          // Arrange
+          const
+            prefixes = {
+              wait: "⏰",
+              ok: "👍",
+              fail: "💥"
+            },
+            sut = create({
+              indent: 2,
+              ciMode: false,
+              prefixes
+            }),
+            label = faker.word.words(),
+            func = () => {
+              // intentionally blank
+            };
+          // Act
+          void sut.exec(label, func);
+          // Assert
+          expect(process.stdout.write)
+            .toHaveBeenCalledTimes(2);
+          expect(process.stdout.write)
+            .toHaveBeenCalledWith(`\r\r  ${prefixes.wait}  ${label}`);
+          const clear = " ".repeat(`${prefixes.wait}  ${label}`.length);
+          const expected = `\r${clear}\r  👍  ${label}\n`;
+          expect(process.stdout.write)
+            .toHaveBeenCalledWith(expected);
+        });
+      });
     });
 
     describe(`default behavior`, () => {
@@ -139,7 +212,8 @@ describe(`exec-step`, () => {
             }
           });
         // Act
-        await sut.exec(faker.string.alphanumeric(), () => {});
+        await sut.exec(faker.string.alphanumeric(), () => {
+        });
         // Assert
         const calls = (process.stdout.write as Mock).mock.calls;
         expect(calls[0][0])

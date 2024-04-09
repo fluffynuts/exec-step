@@ -15,4 +15,5 @@ export interface ExecStepConfiguration {
   throwErrors: boolean;
   dumpErrorStacks: boolean;
   ciMode: boolean;
+  indent: number;
 }

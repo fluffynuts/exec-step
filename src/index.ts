@@ -1,7 +1,4 @@
 // noinspection PointlessBooleanExpressionJS
-
-import * as colors from "ansi-colors";
-import { type StyleFunction } from "ansi-colors";
 import { type ExecStepConfiguration, type Func } from "./types";
 import { asciiPrefixes, defaultConfig, utf8Prefixes } from "./defaults";
 import { InteractiveLabeler } from "./interactive-labeler";
@@ -23,37 +20,27 @@ function envFlag(name: string, fallback: boolean = false): boolean {
 }
 
 export class ExecStepContext {
+  public get config(): ExecStepConfiguration {
+    return { ...this._config };
+  }
+
+  public get lastLineLength(): number {
+    return this._labeler.lastLineLength;
+  }
+
   private readonly _config: ExecStepConfiguration;
+
   private readonly _labeler: Labeler;
 
+  public get indent(): number {
+    return this._labeler.indent;
+  }
+
+  public set indent(value: number) {
+    this._labeler.indent = value;
+  }
+
   constructor(config?: Partial<ExecStepConfiguration> | "ascii") {
-    // const defaults = { ...defaultConfig };
-    // defaults.prefixes = envFlag("ASCII_STEP_MARKERS", false)
-    //   ? asciiPrefixes
-    //   : utf8Prefixes;
-    //
-    // if (config === "ascii") {
-    //   config = {
-    //     ...defaults,
-    //     prefixes: asciiPrefixes
-    //   };
-    //   if (process.env.ASCII_STEP_MARKERS !== undefined) {
-    //     // env overrides always
-    //     config.prefixes = defaults.prefixes;
-    //   }
-    // } else {
-    //   if (!!config) {
-    //     if (config.ciMode === true && config.asciiPrefixes === undefined) {
-    //       config.asciiPrefixes = true;
-    //     }
-    //     if (config.asciiPrefixes === true) {
-    //       config.prefixes = asciiPrefixes;
-    //     }
-    //   } else {
-    //     config = { ...defaults };
-    //   }
-    // }
-    //
     const conf = this._config = this._resolveConfig(config);
     if (conf.ciMode) {
       this._labeler = new CiLabeler(conf);
@@ -93,15 +80,6 @@ export class ExecStepContext {
       }
     }
     return Object.assign({}, defaults, result) as ExecStepConfiguration;
-  }
-
-  private resolveColorFunction(fn: string | undefined, fallback: string): StyleFunction {
-    const result = (colors as any)[fn ?? fallback] as StyleFunction;
-    if (result === undefined) {
-      console.warn(`${fn} is not a known ansi-colors style function; falling back on ${fallback}`);
-      return (colors as any)[fallback] as StyleFunction;
-    }
-    return result;
   }
 
   private start(label: string): void {

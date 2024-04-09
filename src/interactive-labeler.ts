@@ -4,13 +4,29 @@ import { type ExecStepConfiguration, type StepConfig } from "./types";
 import { asciiPrefixes, defaultConfig } from "./defaults";
 import { type StyleFunction } from "ansi-colors";
 
-export class InteractiveLabeler implements Labeler {
+type ColorTransform = (s: string) => string;
+
+export class InteractiveLabeler
+implements Labeler {
+  public get lastLineLength(): number {
+    return (this._current || "").length;
+  }
+
   private _current: string = "";
   private readonly _config: ExecStepConfiguration;
-  private readonly _waitColor: StyleFunction;
-  private readonly _okColor: StyleFunction;
-  private readonly _failColor: StyleFunction;
+  private readonly _waitColor: ColorTransform;
+  private readonly _okColor: ColorTransform;
+  private readonly _failColor: ColorTransform;
   private readonly _prefixes: StepConfig<string>;
+  private _indentChars: string = "";
+
+  public get indent(): number {
+    return this._indentChars.split("").length;
+  }
+
+  public set indent(value) {
+    this._indentChars = " ".repeat(value);
+  }
 
   constructor(cfg: ExecStepConfiguration) {
     this._config = { ...cfg };
@@ -38,24 +54,25 @@ export class InteractiveLabeler implements Labeler {
       ok: cfg.prefixes?.ok ?? defaultConfig.prefixes?.wait ?? "-ok-",
       fail: cfg.prefixes?.fail ?? defaultConfig.prefixes?.fail ?? "-fail-"
     };
+    this.indent = cfg.indent;
+  }
+
+  start(label: string): void {
+    const clear = this.createClear();
+    this._current = `${this._waitColor(this._prefixes.wait)}  ${label}`;
+    process.stdout.write(`${clear}${this._current}`);
   }
 
   complete(label: string): void {
     const clear = this.createClear();
-    const message = `${this._okColor(this._prefixes.ok)} ${label}`;
+    const message = `${this._okColor(this._prefixes.ok)}  ${label}`;
     this._current = "";
     process.stdout.write(`${clear}${message}\n`);
   }
 
-  private createClear(): string {
-    const priorLength = (this._current || "").length;
-    return `\r${" ".repeat(priorLength)}\r`;
-  }
-
   fail(label: string, e: Error): void {
     const clear = this.createClear();
-
-    const message = `${this._failColor(this._prefixes.fail)} ${label}`;
+    const message = `${this._failColor(this._prefixes.fail)}  ${label}`;
     this._current = "";
     process.stdout.write(`${clear}${message}\n`);
     if (!e || this._config.suppressErrorReporting) {
@@ -67,10 +84,8 @@ export class InteractiveLabeler implements Labeler {
     process.stderr.write(`${this._failColor(errorMessage)}\n`);
   }
 
-  start(label: string): void {
-    const clear = this.createClear();
-    this._current = `${this._waitColor(this._prefixes.wait)} ${label}`;
-    process.stdout.write(`${clear}${this._current}`);
+  private createClear(): string {
+    return `\r${" ".repeat(this.lastLineLength)}\r${this._indentChars}`;
   }
 
   suppressErrors(): void {
@@ -81,8 +96,11 @@ export class InteractiveLabeler implements Labeler {
     this._config.throwErrors = false;
   }
 
-  private resolveColorFunction(fn: string | undefined, fallback: string): StyleFunction {
-    const result = (colors as any)[fn ?? fallback] as StyleFunction;
+  private resolveColorFunction(fn: string | undefined, fallback: string): ColorTransform {
+    if (process.env.NO_COLOR) {
+      return s => s;
+    }
+    const result = (colors as any)[fn ?? fallback] as ColorTransform;
     if (result === undefined) {
       console.warn(`${fn} is not a known ansi-colors style function; falling back on ${fallback}`);
       return (colors as any)[fallback] as StyleFunction;

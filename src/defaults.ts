@@ -23,5 +23,6 @@ export const defaultConfig: ExecStepConfiguration = {
   suppressErrorReporting: false,
   asciiPrefixes: false,
   prefixes: { ...utf8Prefixes },
-  ciMode: false
+  ciMode: false,
+  indent: 0
 };
