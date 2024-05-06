@@ -5,7 +5,6 @@ import { ExecStepContext } from "../src";
 import { ExecStepConfiguration } from "../src/types";
 import { sleep } from "expect-even-more-jest";
 import Mock = jest.Mock;
-import Spy = jasmine.Spy;
 
 const realStdoutWrite = process.stdout.write.bind(process.stdout);
 const realStdErrWrite = process.stderr.write.bind(process.stderr);
@@ -89,8 +88,8 @@ describe(`exec-step`, () => {
             .toHaveBeenCalledTimes(2);
           const mock = (process.stdout.write as jest.Mock).mock;
           expect(mock.calls[0][0])
-            .toEqual(`\r\r  [ WAIT ]  ${label}`);
-          const clear = " ".repeat(`[  OK  ]  ${label}`.length);
+            .toEqual(`\r\r  [ WAIT ] ${label}`);
+          const clear = " ".repeat(`[  OK  ] ${label}`.length);
           const x = mock.calls[1][0];
           const parts = x.split("\r");
           expect(parts[0])
@@ -98,7 +97,7 @@ describe(`exec-step`, () => {
           expect(parts[1])
             .toEqual(clear);
           expect(parts[2])
-            .toEqual(`  [  OK  ]  ${label}\n`);
+            .toEqual(`  [  OK  ] ${label}\n`);
         });
       });
 
@@ -126,9 +125,9 @@ describe(`exec-step`, () => {
           expect(process.stdout.write)
             .toHaveBeenCalledTimes(2);
           expect(process.stdout.write)
-            .toHaveBeenCalledWith(`\r\r  ${prefixes.wait}  ${label}`);
-          const clear = " ".repeat(`${prefixes.wait}  ${label}`.length);
-          const expected = `\r${clear}\r  👍  ${label}\n`;
+            .toHaveBeenCalledWith(`\r\r  ${prefixes.wait} ${label}`);
+          const clear = " ".repeat(`${prefixes.wait} ${label}`.length);
+          const expected = `\r${clear}\r  👍 ${label}\n`;
           expect(process.stdout.write)
             .toHaveBeenCalledWith(expected);
         });
@@ -328,12 +327,12 @@ describe(`exec-step`, () => {
       // Act
       await ctx.exec(
         label,
-        () => sleep(500)
+        async () => { await sleep(500); }
       );
       // Assert
       expect(process.stdout.write)
         .toHaveBeenCalledWith(
-          `${label}...`
+          `${label}... `
         );
       expect(process.stdout.write)
         .toHaveBeenCalledWith(

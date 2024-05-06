@@ -1,4 +1,4 @@
-import { type Labeler } from "./labeler";
+import { type Labeler, LabelerBase } from "./labeler";
 import { type ExecStepConfiguration } from "./types";
 import { defaultConfig } from "./defaults";
 
@@ -8,13 +8,15 @@ function write(s: string): number {
 }
 
 export class CiLabeler
-implements Labeler {
+  extends LabelerBase
+  implements Labeler {
   private readonly _ok: string;
   private readonly _fail: string;
   private _indent: string;
   private _lastLineLength: number = 0;
 
   constructor(private readonly _options: ExecStepConfiguration) {
+    super();
     this._ok = this._options?.prefixes?.ok ?? defaultConfig.prefixes?.ok ?? "ok";
     this._fail = this._options?.prefixes?.fail ?? defaultConfig.prefixes?.fail ?? "fail";
     this._indent = " ".repeat(this._options.indent);
@@ -54,7 +56,7 @@ implements Labeler {
   }
 
   start(label: string): void {
-    this._lastLineLength = write(`${this._indent}${label}...`);
+    this._lastLineLength = write(`${this._indent}${label}...${this._iconPaddingChars}`);
   }
 
   suppressErrorReporting(): void {

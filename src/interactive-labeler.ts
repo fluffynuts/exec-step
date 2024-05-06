@@ -1,5 +1,5 @@
 import * as colors from "ansi-colors";
-import { type Labeler } from "./labeler";
+import { type Labeler, LabelerBase } from "./labeler";
 import { type ExecStepConfiguration, type StepConfig } from "./types";
 import { asciiPrefixes, defaultConfig } from "./defaults";
 import { type StyleFunction } from "ansi-colors";
@@ -7,7 +7,8 @@ import { type StyleFunction } from "ansi-colors";
 type ColorTransform = (s: string) => string;
 
 export class InteractiveLabeler
-implements Labeler {
+  extends LabelerBase
+  implements Labeler {
   public get lastLineLength(): number {
     return (this._current || "").length;
   }
@@ -29,6 +30,7 @@ implements Labeler {
   }
 
   constructor(cfg: ExecStepConfiguration) {
+    super();
     this._config = { ...cfg };
     if (this._config.asciiPrefixes) {
       this._config.prefixes = asciiPrefixes;
@@ -59,20 +61,20 @@ implements Labeler {
 
   start(label: string): void {
     const clear = this.createClear();
-    this._current = `${this._waitColor(this._prefixes.wait)}  ${label}`;
+    this._current = `${this._waitColor(this._prefixes.wait)}${this._iconPaddingChars}${label}`;
     process.stdout.write(`${clear}${this._current}`);
   }
 
   complete(label: string): void {
     const clear = this.createClear();
-    const message = `${this._okColor(this._prefixes.ok)}  ${label}`;
+    const message = `${this._okColor(this._prefixes.ok)}${this._iconPaddingChars}${label}`;
     this._current = "";
     process.stdout.write(`${clear}${message}\n`);
   }
 
   fail(label: string, e: Error): void {
     const clear = this.createClear();
-    const message = `${this._failColor(this._prefixes.fail)}  ${label}`;
+    const message = `${this._failColor(this._prefixes.fail)}${this._iconPaddingChars}${label}`;
     this._current = "";
     process.stdout.write(`${clear}${message}\n`);
     if (!e || this._config.suppressErrorReporting) {

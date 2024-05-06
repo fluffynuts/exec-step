@@ -28,6 +28,14 @@ export class ExecStepContext {
     return this._labeler.lastLineLength;
   }
 
+  public get iconPadding(): number {
+    return this._labeler.iconPadding;
+  }
+
+  public set iconPadding(value: number) {
+    this._labeler.iconPadding = value;
+  }
+
   private readonly _config: ExecStepConfiguration;
 
   private readonly _labeler: Labeler;
