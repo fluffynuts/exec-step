@@ -101,7 +101,7 @@ describe(`exec-step`, () => {
             .toEqual(`  [  OK  ]  ${label}\n`);
         });
       });
-      
+
       describe(`interactive`, () => {
         it(`should indent by the provided character count`, async () => {
           // Arrange
@@ -217,7 +217,7 @@ describe(`exec-step`, () => {
         // Assert
         const calls = (process.stdout.write as Mock).mock.calls;
         expect(calls[0][0])
-          .toContain("⌛");
+          .toContain("🟡");
         expect(calls[1][0])
           .toContain("🐮");
       });

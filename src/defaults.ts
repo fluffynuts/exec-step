@@ -1,9 +1,9 @@
 import { type ExecStepConfiguration, type StepConfig } from "./types";
 
 export const utf8Prefixes: StepConfig<string> = {
-  wait: "⌛",
-  ok: "✔",
-  fail: "✖"
+  wait: "🟡",
+  ok: "🟢",
+  fail: "🔴"
 };
 
 export const asciiPrefixes: StepConfig<string> = {
