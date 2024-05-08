@@ -5,7 +5,14 @@ export interface StepConfig<T> {
   ok: T;
   fail: T;
 }
+
 export type PartialStepConfig<T> = Partial<StepConfig<T>>;
+
+export enum Labelers {
+  none,
+  interactive,
+  ci
+}
 
 export interface ExecStepConfiguration {
   suppressErrorReporting: boolean;
@@ -14,6 +21,10 @@ export interface ExecStepConfiguration {
   colors: PartialStepConfig<string>;
   throwErrors: boolean;
   dumpErrorStacks: boolean;
+  /**
+   * deprecated - rather use the labeller property
+   */
   ciMode: boolean;
+  labeler?: Labelers;
   indent: number;
 }

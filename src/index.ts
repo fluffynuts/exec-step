@@ -1,9 +1,10 @@
 // noinspection PointlessBooleanExpressionJS
-import { type ExecStepConfiguration, type Func } from "./types";
+import { type ExecStepConfiguration, type Func, Labelers } from "./types";
 import { asciiPrefixes, defaultConfig, utf8Prefixes } from "./defaults";
 import { InteractiveLabeler } from "./interactive-labeler";
 import { type Labeler } from "./labeler";
 import { CiLabeler } from "./ci-labeler";
+import { NullLabeler } from "./null-labeler";
 
 function envFlag(name: string, fallback: boolean = false): boolean {
   const envValue = process.env[name];
@@ -50,10 +51,25 @@ export class ExecStepContext {
 
   constructor(config?: Partial<ExecStepConfiguration> | "ascii") {
     const conf = this._config = this._resolveConfig(config);
-    if (conf.ciMode) {
-      this._labeler = new CiLabeler(conf);
+    if (conf.labeler === undefined) {
+      if (conf.ciMode) {
+        this._labeler = new CiLabeler(conf);
+      } else {
+        this._labeler = new InteractiveLabeler(conf);
+      }
     } else {
-      this._labeler = new InteractiveLabeler(conf);
+      switch (conf.labeler) {
+        case Labelers.interactive:
+        case undefined:
+        case null:
+          this._labeler = new InteractiveLabeler(conf);
+          break;
+        case Labelers.ci:
+          this._labeler = new CiLabeler(conf);
+          break;
+        case Labelers.none:
+          this._labeler = new NullLabeler();
+      }
     }
   }
 

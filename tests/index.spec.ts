@@ -2,7 +2,7 @@
 import "expect-even-more-jest";
 import { faker } from "@faker-js/faker";
 import { ExecStepContext } from "../src";
-import { ExecStepConfiguration } from "../src/types";
+import { ExecStepConfiguration, Labelers } from "../src/types";
 import { sleep } from "expect-even-more-jest";
 import Mock = jest.Mock;
 
@@ -327,7 +327,9 @@ describe(`exec-step`, () => {
       // Act
       await ctx.exec(
         label,
-        async () => { await sleep(500); }
+        async () => {
+          await sleep(500);
+        }
       );
       // Assert
       expect(process.stdout.write)
@@ -338,6 +340,25 @@ describe(`exec-step`, () => {
         .toHaveBeenCalledWith(
           `[  OK  ]\n`
         );
+    });
+    beforeEach(() => {
+      spyOnIo();
+    });
+  });
+
+  describe(`suppressing output`, () => {
+    it(`should suppress via null-labeller`, async () => {
+      // Arrange
+      const
+        ctx = new ExecStepContext({
+          labeler: Labelers.none
+        });
+      // Act
+      ctx.exec("foo to the bar", () => {
+      });
+      // Assert
+      expect(process.stdout.write)
+        .not.toHaveBeenCalled();
     });
     beforeEach(() => {
       spyOnIo();
