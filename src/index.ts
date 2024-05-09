@@ -1,8 +1,8 @@
 // noinspection PointlessBooleanExpressionJS
-import { type ExecStepConfiguration, type Func, Labelers } from "./types";
+import { type ExecStepConfiguration, type Func } from "./types";
 import { asciiPrefixes, defaultConfig, utf8Prefixes } from "./defaults";
 import { InteractiveLabeler } from "./interactive-labeler";
-import { type Labeler } from "./labeler";
+import { type Labeler, Labelers } from "./labeler";
 import { CiLabeler } from "./ci-labeler";
 import { NullLabeler } from "./null-labeler";
 

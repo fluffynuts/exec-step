@@ -2,9 +2,10 @@
 import "expect-even-more-jest";
 import { faker } from "@faker-js/faker";
 import { ExecStepContext } from "../src";
-import { ExecStepConfiguration, Labelers } from "../src/types";
+import { ExecStepConfiguration } from "../src/types";
 import { sleep } from "expect-even-more-jest";
 import Mock = jest.Mock;
+import { Labelers } from "../src/labeler";
 
 const realStdoutWrite = process.stdout.write.bind(process.stdout);
 const realStdErrWrite = process.stderr.write.bind(process.stderr);

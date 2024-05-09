@@ -1,3 +1,5 @@
+import type { Labelers } from "./labeler";
+
 export type Func<T> = () => T | Promise<T>;
 
 export interface StepConfig<T> {
@@ -7,12 +9,6 @@ export interface StepConfig<T> {
 }
 
 export type PartialStepConfig<T> = Partial<StepConfig<T>>;
-
-export enum Labelers {
-  none,
-  interactive,
-  ci
-}
 
 export interface ExecStepConfiguration {
   suppressErrorReporting: boolean;

@@ -22,3 +22,9 @@ export abstract class LabelerBase {
 
   protected _iconPaddingChars = " ";
 }
+
+export enum Labelers {
+  none,
+  interactive,
+  ci
+}
