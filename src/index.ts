@@ -6,6 +6,8 @@ import { type Labeler, Labelers } from "./labeler";
 import { CiLabeler } from "./ci-labeler";
 import { NullLabeler } from "./null-labeler";
 
+export { Labelers } from "./labeler";
+
 function envFlag(name: string, fallback: boolean = false): boolean {
   const envValue = process.env[name];
   if (envValue === undefined) {
@@ -95,8 +97,11 @@ export class ExecStepContext {
         if (config.ciMode === true && config.asciiPrefixes === undefined) {
           result.asciiPrefixes = true;
         }
-        // eslint-disable-next-line @typescript-eslint/no-unnecessary-boolean-literal-compare
-        if (result.asciiPrefixes === true) {
+        // TS and WebStorm really want me to drop the === here,
+        // but the reality is that the caller could be coming
+        // in from the wicky-wild-west of JS-land and asciiPrefixes
+        // could be absolutely anything.
+        if ((result.asciiPrefixes as any) === true) {
           result.prefixes = asciiPrefixes;
         }
       } else {
