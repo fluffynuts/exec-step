@@ -1,6 +1,6 @@
 {
   "name": "exec-step",
-  "version": "0.12.0",
+  "version": "0.13.0",
   "description": "executes a step in a series with console feedback",
   "main": "dist/index.js",
   "scripts": {
