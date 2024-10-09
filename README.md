@@ -71,3 +71,29 @@ const asciiPrefixes: PartialStepConfig<string> = {
     fail: "[ FAIL ]"
 }
 ```
+
+error handling
+---
+
+by default, exec-step will print out the task label with the failure marker
+of your choosing and re-throw the error, however, you can take complete control
+by handling errors within your task and throwing an ExecStepOverrideMessage error, 
+eg:
+
+```typescript
+await ctx.exec("do the thing", async () => {
+    try {
+        await attemptToDoTheThing();
+    } catch (e) {
+        throw new ExecStepOverrideMessage(
+            // overrides the error label
+            `Error whilst attempting to do the thing: ${e.message}`,
+            // original error, rethrown if allowed
+            e,
+            // suppress the error being thrown with false, or 
+            // set this true to rethrow the original error
+            // if the context's default behavior is to throw
+            false
+        );
+    }
+});

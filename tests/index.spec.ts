@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/quotes,@typescript-eslint/explicit-function-return-type,one-var */
 import "expect-even-more-jest";
 import { faker } from "@faker-js/faker";
-import { ExecStepContext } from "../src";
+import { ExecStepContext, ExecStepOverrideMessage } from "../src";
 import { ExecStepConfiguration } from "../src/types";
 import { sleep } from "expect-even-more-jest";
 import Mock = jest.Mock;
@@ -360,6 +360,28 @@ describe(`exec-step`, () => {
       // Assert
       expect(process.stdout.write)
         .not.toHaveBeenCalled();
+    });
+    beforeEach(() => {
+      spyOnIo();
+    });
+  });
+
+  describe(`overriding the final message`, () => {
+    it(`should override the final message when an ExecStepOverrideMessage is thrown`, async () => {
+      // Arrange
+      const
+        ctx = new ExecStepContext();
+      // Act
+      expect(() => {
+        ctx.exec("initial label", () => {
+          throw new ExecStepOverrideMessage("final label", new Error("original"), false);
+        });
+      }).not.toThrow();
+      // Assert
+      expect(process.stdout.write)
+        .toHaveBeenCalledWith(
+          expect.stringContaining("final label")
+        );
     });
     beforeEach(() => {
       spyOnIo();

@@ -139,6 +139,12 @@ export class ExecStepContext {
           this.complete(label);
           return result;
         }).catch(err => {
+          if (err instanceof ExecStepOverrideMessage) {
+            this.fail(err.message, err);
+            if (err.rethrow !== undefined && !err.rethrow) {
+              return;
+            }
+          }
           this.fail(label, err);
           if (this._config.throwErrors) {
             throw err;
@@ -146,9 +152,17 @@ export class ExecStepContext {
         });
       }
     } catch (e) {
-      this.fail(label, e as Error);
+      let err = e;
+      if (err instanceof ExecStepOverrideMessage) {
+        this.fail(err.message, err);
+        if (err.rethrow !== undefined && !err.rethrow) {
+          return;
+        }
+        err = err.originalError;
+      }
+      this.fail(label, err as Error);
       if (this._config.throwErrors) {
-        throw e;
+        throw err;
       }
     }
   }
@@ -171,3 +185,14 @@ export class ExecStepContext {
 }
 
 export const ctx = new ExecStepContext();
+
+export class ExecStepOverrideMessage
+  extends Error {
+  constructor(
+    message: string,
+    public originalError: Error,
+    public rethrow: boolean
+  ) {
+    super(message);
+  }
+}
