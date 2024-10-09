@@ -119,7 +119,7 @@ export class ExecStepContext {
     this._labeler.complete(label);
   }
 
-  private fail(label: string, e: Error): void {
+  private fail(label: string, e: Error | undefined): void {
     this._labeler.fail(label, e);
   }
 
@@ -140,12 +140,13 @@ export class ExecStepContext {
           return result;
         }).catch(err => {
           if (err instanceof ExecStepOverrideMessage) {
-            this.fail(err.message, err);
+            this.fail(err.message, undefined);
             if (err.rethrow !== undefined && !err.rethrow) {
               return;
             }
+          } else {
+            this.fail(label, err);
           }
-          this.fail(label, err);
           if (this._config.throwErrors) {
             throw err;
           }
@@ -154,13 +155,14 @@ export class ExecStepContext {
     } catch (e) {
       let err = e;
       if (err instanceof ExecStepOverrideMessage) {
-        this.fail(err.message, err);
+        this.fail(err.message, undefined);
         if (err.rethrow !== undefined && !err.rethrow) {
           return;
         }
         err = err.originalError;
+      } else {
+        this.fail(label, err as Error);
       }
-      this.fail(label, err as Error);
       if (this._config.throwErrors) {
         throw err;
       }
