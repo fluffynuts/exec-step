@@ -72,7 +72,7 @@ export class InteractiveLabeler
     process.stdout.write(`${clear}${message}\n`);
   }
 
-  fail(label: string, e: Error): void {
+  fail(label: string, e: Error | undefined): void {
     const clear = this.createClear();
     const message = `${this._failColor(this._prefixes.fail)}${this._iconPaddingChars}${label}`;
     this._current = "";

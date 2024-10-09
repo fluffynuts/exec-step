@@ -384,7 +384,11 @@ describe(`exec-step`, () => {
         );
     });
     beforeEach(() => {
+      echo = true;
       spyOnIo();
+    });
+    afterEach(() => {
+      echo = false;
     });
   });
 
@@ -395,7 +399,7 @@ describe(`exec-step`, () => {
     return new ExecStepContext(config ?? "ascii");
   }
 
-  const echo = false;
+  let echo = false;
 
   function spyOnIo() {
     jest.spyOn(process.stdout, "write").mockImplementation(

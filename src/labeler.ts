@@ -1,7 +1,7 @@
 export interface Labeler {
   start: (label: string) => void;
   complete: (label: string) => void;
-  fail: (label: string, e: Error) => void;
+  fail: (label: string, e: Error | undefined) => void;
   suppressErrors: () => void;
   suppressErrorReporting: () => void;
   enableErrorReporting: () => void;

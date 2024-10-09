@@ -47,10 +47,10 @@ export class CiLabeler
     this._options.throwErrors = true;
   }
 
-  fail(_: string, e: Error): void {
+  fail(_: string, e: Error | undefined): void {
     this._lastLineLength = 0;
     write(`${this._indent}${this._fail}\n`);
-    if (this._options.throwErrors) {
+    if (this._options.throwErrors && !!e) {
       throw e;
     }
   }
