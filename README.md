@@ -97,3 +97,19 @@ await ctx.exec("do the thing", async () => {
         );
     }
 });
+```
+
+testing
+---
+
+to avoid output in your tests, do something like:
+
+```
+import { ctx } from "exec-step"
+
+describe("the thing", () => {
+    beforeEach(() => {
+        ctx.mute();
+    });
+});
+```

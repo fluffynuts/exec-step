@@ -1,11 +1,10 @@
 /* eslint-disable @typescript-eslint/quotes,@typescript-eslint/explicit-function-return-type,one-var */
-import "expect-even-more-jest";
 import { faker } from "@faker-js/faker";
 import { ExecStepContext, ExecStepOverrideMessage } from "../src";
-import { ExecStepConfiguration } from "../src/types";
+import type { ExecStepConfiguration, IExecStepContext } from "../src/types";
 import { sleep } from "expect-even-more-jest";
-import Mock = jest.Mock;
 import { Labelers } from "../src/labeler";
+import Mock = jest.Mock;
 
 const realStdoutWrite = process.stdout.write.bind(process.stdout);
 const realStdErrWrite = process.stderr.write.bind(process.stderr);
@@ -18,7 +17,9 @@ describe(`exec-step`, () => {
       const
         sut = create(),
         label = faker.word.words(),
-        func = () => called = true;
+        func = () => {
+          called = true;
+        };
       // Act
       sut.exec(label, func);
       // Assert
@@ -142,11 +143,13 @@ describe(`exec-step`, () => {
           sut = create({ throwErrors: false }),
           label = faker.word.words(),
           error = faker.word.words(),
-          func = () => {
-            throw new Error(error);
+          func = async (): Promise<void> => {
+            return await new Promise<void>((resolve, reject) =>
+              reject(new Error(error))
+            );
           };
         // Act
-        await sut.exec(label, func);
+        await sut.exec(label, async () => await func());
         // Assert
         expect(process.stdout.write)
           .toHaveBeenCalledTimes(2);
@@ -182,7 +185,7 @@ describe(`exec-step`, () => {
           };
         // Act
         sut.suppressErrorReporting();
-        await sut.exec(label, func);
+        sut.exec(label, func);
         // Assert
         expect(process.stdout.write)
           .toHaveBeenCalledTimes(2);
@@ -212,7 +215,7 @@ describe(`exec-step`, () => {
             }
           });
         // Act
-        await sut.exec(faker.string.alphanumeric(), () => {
+        sut.exec(faker.string.alphanumeric(), () => {
         });
         // Assert
         const calls = (process.stdout.write as Mock).mock.calls;
@@ -237,7 +240,9 @@ describe(`exec-step`, () => {
       const
         sut = create(),
         label = faker.word.words(),
-        func = async () => called = true;
+        func = async () => {
+          called = true;
+        };
       // Act
       await sut.exec(label, func);
       // Assert
@@ -348,18 +353,49 @@ describe(`exec-step`, () => {
   });
 
   describe(`suppressing output`, () => {
-    it(`should suppress via null-labeller`, async () => {
+    it(`should suppress via null-labeler`, async () => {
       // Arrange
       const
         ctx = new ExecStepContext({
           labeler: Labelers.none
-        });
+        }),
+        fn = (): void => {
+        };
       // Act
-      ctx.exec("foo to the bar", () => {
-      });
+      ctx.exec("foo to the bar", fn);
       // Assert
       expect(process.stdout.write)
         .not.toHaveBeenCalled();
+    });
+
+    it(`should be able to temporarily suppress output via mute/unmute`, async () => {
+      // Arrange
+      const
+        ctx = new ExecStepContext({
+          labeler: Labelers.ci
+        });
+      // Act
+      ctx.exec("first task", noop);
+      expect(process.stdout.write)
+        .toHaveBeenCalledOnceWith(
+          expect.stringContaining(
+            "first task"
+          )
+        );
+      ctx.mute();
+      clearIoSpyCalls();
+      ctx.exec("second task", noop);
+      expect(process.stdout.write)
+        .not.toHaveBeenCalled();
+      ctx.unmute();
+      ctx.exec("third task", noop);
+      expect(process.stdout.write)
+        .toHaveBeenCalledWith(
+          expect.stringContaining(
+            "third task"
+          )
+        );
+      // Assert
     });
     beforeEach(() => {
       spyOnIo();
@@ -369,6 +405,7 @@ describe(`exec-step`, () => {
   describe(`overriding the final message`, () => {
     it(`should override the final message when an ExecStepOverrideMessage is thrown`, async () => {
       // Arrange
+      echo = false;
       const
         ctx = new ExecStepContext();
       // Act
@@ -392,7 +429,7 @@ describe(`exec-step`, () => {
     });
   });
 
-  function create(config?: Partial<ExecStepConfiguration>) {
+  function create(config?: Partial<ExecStepConfiguration>): IExecStepContext {
     if (config && !config.prefixes) {
       config.asciiPrefixes = true;
     }
@@ -409,6 +446,18 @@ describe(`exec-step`, () => {
         }
         return true;
       });
+  }
+
+  function clearIoSpyCalls() {
+    const fn = process.stdout.write as jest.Mock;
+    if (!fn.mock) {
+      throw new Error(`process.stdout.write is not a jest mock`);
+    }
+    fn.mockClear();
+  }
+
+  function noop() {
+    // intentionally left blank
   }
 
   jest.spyOn(process.stderr, "write").mockImplementation(

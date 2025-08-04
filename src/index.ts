@@ -1,5 +1,5 @@
 // noinspection PointlessBooleanExpressionJS
-import { type ExecStepConfiguration, type Func } from "./types";
+import type { ExecStepConfiguration, Func, IExecStepContext } from "./types";
 import { asciiPrefixes, defaultConfig, utf8Prefixes } from "./defaults";
 import { InteractiveLabeler } from "./interactive-labeler";
 import { type Labeler, Labelers } from "./labeler";
@@ -22,7 +22,7 @@ function envFlag(name: string, fallback: boolean = false): boolean {
   ].includes(envValue.toLowerCase());
 }
 
-export class ExecStepContext {
+export class ExecStepContext implements IExecStepContext {
   public get config(): ExecStepConfiguration {
     return { ...this._config };
   }
@@ -41,7 +41,7 @@ export class ExecStepContext {
 
   private readonly _config: ExecStepConfiguration;
 
-  private readonly _labeler: Labeler;
+  private _labeler: Labeler;
 
   public get indent(): number {
     return this._labeler.indent;
@@ -73,6 +73,25 @@ export class ExecStepContext {
           this._labeler = new NullLabeler();
       }
     }
+  }
+
+  private _originalLabeler: Labeler | undefined;
+
+  public mute(): void {
+    if (this._labeler instanceof NullLabeler) {
+      return; // already muted
+    }
+    this._originalLabeler = this._labeler;
+    this._labeler = new NullLabeler();
+  }
+
+  public unmute(): void {
+    if (!this._originalLabeler) {
+      // not muted
+      return;
+    }
+    this._labeler = this._originalLabeler;
+    this._originalLabeler = undefined;
   }
 
   private _resolveConfig(config?: Partial<ExecStepConfiguration> | "ascii"): ExecStepConfiguration {
@@ -123,22 +142,23 @@ export class ExecStepContext {
     this._labeler.fail(label, e);
   }
 
-  exec<T>(
+  public exec<T>(
     label: string,
     func: Func<T>
-  ): T | Promise<T | void> | void {
+  ): T {
     try {
       this.start(label);
-      const funcResult = func() as Promise<T>;
+      const funcResult = func() as any;
       if (funcResult === undefined ||
-          typeof funcResult.then !== "function") {
+        typeof funcResult.then !== "function") {
         this.complete(label);
-        return funcResult;
+        return funcResult as T;
       } else {
-        return funcResult.then(result => {
+        return funcResult.then((result: T) => {
           this.complete(label);
           return result;
-        }).catch(err => {
+        })
+        .catch((err: any) => {
           if (err instanceof ExecStepOverrideMessage) {
             this.fail(err.message, undefined);
             if (err.rethrow !== undefined && !err.rethrow) {
@@ -157,7 +177,7 @@ export class ExecStepContext {
       if (err instanceof ExecStepOverrideMessage) {
         this.fail(err.message, undefined);
         if (err.rethrow !== undefined && !err.rethrow) {
-          return;
+          return undefined as unknown as T;
         }
         err = err.originalError;
       } else {
@@ -166,6 +186,11 @@ export class ExecStepContext {
       if (this._config.throwErrors) {
         throw err;
       }
+      // if the caller has suppressed errors,
+      // then getting an unexpected undefined
+      // shouldn't matter
+      // -> I'm just trying to keep the interface simple
+      return undefined as unknown as T;
     }
   }
 
@@ -186,7 +211,7 @@ export class ExecStepContext {
   }
 }
 
-export const ctx = new ExecStepContext();
+export const ctx = new ExecStepContext() as IExecStepContext;
 
 export class ExecStepOverrideMessage
   extends Error {
