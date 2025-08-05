@@ -2,13 +2,13 @@ import type { Labeler } from "./labeler";
 
 export class NullLabeler
 implements Labeler {
-  start(label: string): void {
+  start(_: string): void {
   }
 
-  complete(label: string): void {
+  complete(_: string): void {
   }
 
-  fail(label: string, e: Error | undefined): void {
+  fail(_: string, __: Error | undefined): void {
   }
 
   suppressErrors(): void {

@@ -112,7 +112,7 @@ export class ExecStepContext implements IExecStepContext {
       }
     } else {
       result = { ...config } as ExecStepConfiguration;
-      if (!!config) {
+      if (config) {
         if (config.ciMode === true && config.asciiPrefixes === undefined) {
           result.asciiPrefixes = true;
         }
