@@ -407,14 +407,18 @@ describe(`exec-step`, () => {
       // Arrange
       echo = false;
       const
-        ctx = new ExecStepContext();
+        ctx = new ExecStepContext("ascii");
       // Act
       expect(() => {
         ctx.exec("initial label", () => {
-          throw new ExecStepOverrideMessage("final label", new Error("original"), false);
+          throw new ExecStepOverrideMessage("final label");
         });
       }).not.toThrow();
       // Assert
+      expect(process.stdout.write)
+        .toHaveBeenCalledWith(
+          expect.stringContaining("OK")
+        );
       expect(process.stdout.write)
         .toHaveBeenCalledWith(
           expect.stringContaining("final label")

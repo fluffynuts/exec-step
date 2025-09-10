@@ -158,32 +158,43 @@ export class ExecStepContext implements IExecStepContext {
           this.complete(label);
           return result;
         })
-        .catch((err: any) => {
-          if (err instanceof ExecStepOverrideMessage) {
-            this.fail(err.message, undefined);
-            if (err.rethrow !== undefined && !err.rethrow) {
-              return;
+          .catch((err: any) => {
+            if (err instanceof ExecStepOverrideMessage) {
+              if (err.originalError) {
+                this.fail(err.message, undefined);
+                if (err.rethrow !== undefined && !err.rethrow) {
+                  return;
+                }
+                err = err.originalError;
+              } else {
+                this.complete(err.message);
+                err = undefined;
+              }
+            } else {
+              this.fail(label, err);
             }
-          } else {
-            this.fail(label, err);
-          }
-          if (this._config.throwErrors) {
-            throw err;
-          }
-        });
+            if (this._config.throwErrors && err) {
+              throw err;
+            }
+          });
       }
     } catch (e) {
       let err = e;
       if (err instanceof ExecStepOverrideMessage) {
-        this.fail(err.message, undefined);
-        if (err.rethrow !== undefined && !err.rethrow) {
-          return undefined as unknown as T;
+        if (err.originalError) {
+          this.fail(err.message, undefined);
+          if (err.rethrow !== undefined && !err.rethrow) {
+            return undefined as unknown as T;
+          }
+          err = err.originalError;
+        } else {
+          this.complete(err.message);
+          err = undefined;
         }
-        err = err.originalError;
       } else {
         this.fail(label, err as Error);
       }
-      if (this._config.throwErrors) {
+      if (this._config.throwErrors && !!err) {
         throw err;
       }
       // if the caller has suppressed errors,
@@ -217,8 +228,8 @@ export class ExecStepOverrideMessage
   extends Error {
   constructor(
     message: string,
-    public originalError: Error,
-    public rethrow: boolean
+    public originalError?: Error,
+    public rethrow: boolean = false
   ) {
     super(message);
   }
