@@ -51,6 +51,14 @@ export class ExecStepContext implements IExecStepContext {
     this._labeler.indent = value;
   }
 
+  public get timestampsEnabled() {
+    return this._config.timestamps ?? false;
+  }
+
+  public set timestampsEnabled(value: boolean) {
+    this._config.timestamps = value;
+  }
+
   constructor(config?: Partial<ExecStepConfiguration> | "ascii") {
     const conf = this._config = this._resolveConfig(config);
     if (conf.labeler === undefined) {
@@ -130,16 +138,39 @@ export class ExecStepContext implements IExecStepContext {
     return Object.assign({}, defaults, result) as ExecStepConfiguration;
   }
 
+  private timestampIfRequired(label: string) {
+    return this.timestampsEnabled
+      ? `[${this.currentTimestamp}] ${label}`
+      : label;
+  }
+
+  public get currentTimestamp() {
+    return (new Date()).toISOString();
+  }
+
   private start(label: string): void {
-    this._labeler.start(label);
+    this._labeler.start(
+      this.timestampIfRequired(
+        label
+      )
+    );
   }
 
   private complete(label: string): void {
-    this._labeler.complete(label);
+    this._labeler.complete(
+      this.timestampIfRequired(
+        label
+      )
+    );
   }
 
   private fail(label: string, e: Error | undefined): void {
-    this._labeler.fail(label, e);
+    this._labeler.fail(
+      this.timestampIfRequired(
+        label
+      ),
+      e
+    );
   }
 
   public exec<T>(

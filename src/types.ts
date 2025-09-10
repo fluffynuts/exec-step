@@ -23,6 +23,7 @@ export interface ExecStepConfiguration {
   ciMode: boolean;
   labeler?: Labelers;
   indent: number;
+  timestamps?: boolean;
 }
 
 export interface IExecStepContext {

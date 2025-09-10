@@ -454,6 +454,64 @@ describe(`exec-step`, () => {
     });
   });
 
+  describe(`displaying timestamps`, () => {
+    const timestampedRegex = /(?<date>\[[^]+Z])/;
+    describe(`when not enabled (default)`, () => {
+      it(`should not print the timestamp`, async () => {
+        // Arrange
+        echo = false;
+        const
+          ctx = new ExecStepContext({
+            labeler: Labelers.ci
+          });
+        expect(ctx.timestampsEnabled)
+          .toBeFalse();
+        // Act
+        ctx.exec("moo", () => {
+          // intentionally left blank
+        });
+        // Assert
+        const calls = (process.stdout.write as any).mock.calls;
+        const match = calls[0][0].match(timestampedRegex);
+        expect(match)
+          .toBeNull();
+      });
+    });
+    
+    describe(`when enabled`, () => {
+      it(`should print the timestamp`, async () => {
+        // Arrange
+        echo = true;
+        const
+          ctx = new ExecStepContext({
+            labeler: Labelers.ci,
+          });
+        ctx.timestampsEnabled = true;
+        // Act
+        ctx.exec("moo", () => {
+          // intentionally left blank
+        });
+        // Assert
+        const calls = (process.stdout.write as any).mock.calls;
+        const match = calls[0][0].match(timestampedRegex);
+        expect(match)
+          .not.toBeNull();
+        const parsed = Date.parse(
+          match.groups.date.replace(/^\[/, "").replace(/]$/, "")
+        );
+        expect(parsed)
+          .not.toBeNaN();
+      });
+    });
+    beforeEach(() => {
+      echo = true;
+      spyOnIo();
+    });
+    afterEach(() => {
+      echo = false;
+    });
+  });
+
   function create(config?: Partial<ExecStepConfiguration>): IExecStepContext {
     if (config && !config.prefixes) {
       config.asciiPrefixes = true;
