@@ -403,7 +403,7 @@ describe(`exec-step`, () => {
   });
 
   describe(`overriding the final message`, () => {
-    it(`should override the final message when an ExecStepOverrideMessage is thrown`, async () => {
+    it(`should override the final message when an ExecStepOverrideMessage is thrown (no error)`, async () => {
       // Arrange
       echo = false;
       const
@@ -418,6 +418,27 @@ describe(`exec-step`, () => {
       expect(process.stdout.write)
         .toHaveBeenCalledWith(
           expect.stringContaining("OK")
+        );
+      expect(process.stdout.write)
+        .toHaveBeenCalledWith(
+          expect.stringContaining("final label")
+        );
+    });
+    it(`should override the final message when an ExecStepOverrideMessage is thrown (error)`, async () => {
+      // Arrange
+      echo = false;
+      const
+        ctx = new ExecStepContext("ascii");
+      // Act
+      expect(() => {
+        ctx.exec("initial label", () => {
+          throw new ExecStepOverrideMessage("final label", new Error("die"));
+        });
+      }).not.toThrow();
+      // Assert
+      expect(process.stdout.write)
+        .toHaveBeenCalledWith(
+          expect.stringContaining("FAIL")
         );
       expect(process.stdout.write)
         .toHaveBeenCalledWith(
