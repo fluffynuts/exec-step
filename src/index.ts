@@ -251,6 +251,14 @@ export class ExecStepContext implements IExecStepContext {
   public enableErrorReporting(): void {
     this._labeler.enableErrorReporting();
   }
+
+  public enableTimestamps(): void {
+    this.timestampsEnabled = true;
+  }
+
+  public disableTimestamps(): void {
+    this.timestampsEnabled = false;
+  }
 }
 
 export const ctx = new ExecStepContext() as IExecStepContext;
